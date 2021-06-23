@@ -223,8 +223,8 @@ func (c *MonitoringCollector) reportMonitoringMetrics(ch chan<- prometheus.Metri
 
 		errChannel := make(chan error, len(uniqueDescriptors))
 
-		endTime := time.Now().UTC().Add(c.metricsOffset * -1)
-		startTime := endTime.Add(c.metricsInterval * -1)
+		endTime := time.Now().UTC()
+		startTime := endTime.Add(time.Hour * -1)
 
 		for _, metricDescriptor := range uniqueDescriptors {
 			wg.Add(1)
@@ -259,6 +259,19 @@ func (c *MonitoringCollector) reportMonitoringMetrics(ch chan<- prometheus.Metri
 						errChannel <- err
 						break
 					}
+
+					for _, ts := range page.TimeSeries {
+						for _, p := range ts.Points {
+							if p.Value.Int64Value == nil {
+								continue
+							}
+							if *p.Value.Int64Value == 0 {
+								continue
+							}
+							fmt.Printf("%s VAL: %d\n", ts.Metric.Type, *p.Value.Int64Value) // we are good here!
+						}
+					}
+
 					if page.NextPageToken == "" {
 						break
 					}
